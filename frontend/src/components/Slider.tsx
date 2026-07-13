@@ -5,8 +5,9 @@ import {
   Phone,
   Settings,
   MoreVertical,
+  
 } from "lucide-react";
-
+import { Link } from "react-router-dom";
 import API from "../api/axios";
 import socket from "../socket/socket";
 
@@ -84,11 +85,11 @@ const Slider = ({
     <div className="w-72 bg-[#0f172a] border-r border-slate-800 flex flex-col">
 
       <div className="p-5">
-
+<Link to="/" className="flex items-center gap-2 mb-6">
         <h1 className="text-white text-2xl font-bold mb-6">
           Realtime Chat
         </h1>
-
+</Link>
         <nav className="space-y-2">
 
           {menuItems.map((item) => {
