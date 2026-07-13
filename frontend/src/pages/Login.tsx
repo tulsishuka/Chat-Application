@@ -1,91 +1,102 @@
-import {useState} from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { LogIn, MessageSquare } from "lucide-react";
+
 import API from "../api/axios";
 import socket from "../socket/socket";
-import {useNavigate} from "react-router-dom";
 
+const Login = () => {
+  const [username, setUsername] = useState("");
+  const [loading, setLoading] = useState(false);
 
-const Login=()=>{
+  const navigate = useNavigate();
 
+  const handleLogin = async () => {
+    if (!username.trim()) {
+      alert("Enter username");
+      return;
+    }
 
-const [username,setUsername]=useState("");
+    try {
+      setLoading(true);
 
-const navigate=useNavigate();
+      // Login/Create User
+      const res = await API.post("/auth/login", {
+        username: username.trim(),
+      });
 
+      const user = res.data.user;
 
+      // Save locally
+      localStorage.setItem("username", user.username);
 
-const login=async()=>{
+      // Connect socket once
+      if (!socket.connected) {
+        socket.connect();
+      }
 
+      // Notify server
+      socket.emit("login", user.username);
 
-const response =
-await API.post(
-"/auth/login",
-{
-username
-}
-);
+      navigate("/home");
+    } catch (err) {
+      console.log(err);
+      alert("Login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-900">
 
+      <div className="bg-slate-800 w-[420px] rounded-xl p-8 shadow-lg">
 
-localStorage.setItem(
-"username",
-response.data.user.username
-);
+        <div className="flex justify-center mb-6">
 
+          <div className="w-16 h-16 rounded-xl bg-blue-600 flex items-center justify-center">
+            <MessageSquare className="text-white" size={30} />
+          </div>
 
+        </div>
 
-socket.connect();
+        <h1 className="text-3xl text-white font-bold text-center">
+          Realtime Chat
+        </h1>
 
+        <p className="text-slate-400 text-center mt-2 mb-8">
+          Enter a username to continue
+        </p>
 
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleLogin();
+          }}
+        >
 
-socket.emit(
-"login",
-username
-);
+          <input
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="Username"
+            className="w-full p-3 rounded-lg bg-slate-700 text-white outline-none mb-5"
+          />
 
+          <button
+            disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 p-3 rounded-lg text-white font-semibold flex justify-center items-center gap-2"
+          >
+            {loading ? "Joining..." : "Join Chat"}
 
+            <LogIn size={18} />
+          </button>
 
-navigate("/home");
+        </form>
 
+      </div>
 
+    </div>
+  );
 };
-
-
-
-return (
-
-<div>
-
-<h1>
-Login
-</h1>
-
-
-<input
-
-value={username}
-
-onChange={
-(e)=>setUsername(e.target.value)
-}
-
-placeholder="Enter username"
-
-/>
-
-
-<button onClick={login}>
-
-Join Chat
-
-</button>
-
-
-</div>
-
-);
-
-
-}
-
 
 export default Login;

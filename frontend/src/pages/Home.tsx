@@ -1,19 +1,25 @@
-import React from 'react'
-import ChatMessage from '../components/ChatMessage'
-import Slider from '../components/Slider'
+import { useState } from "react";
+
+import Slider from "../components/Slider";
+import ChatMessage from "../components/ChatMessage";
 
 const Home = () => {
-  return (
-    <div className="flex w-full h-screen overflow-hidden bg-[#09111e]">
-      {/* Sidebar Navigation (Left side) */}
-      <Slider />
-      
-      {/* Main Chat Feed Area (Right side - takes up all remaining width) */}
-      <div className="flex-1 min-w-0 h-full flex flex-col">
-        <ChatMessage />
-      </div>
-    </div>
-  )
-}
+  const [selectedUser, setSelectedUser] = useState("");
 
-export default Home
+  return (
+    <div className="flex h-screen bg-slate-900 overflow-hidden">
+
+      <Slider
+        selectedUser={selectedUser}
+        setSelectedUser={setSelectedUser}
+      />
+
+      <ChatMessage
+        selectedUser={selectedUser}
+      />
+
+    </div>
+  );
+};
+
+export default Home;

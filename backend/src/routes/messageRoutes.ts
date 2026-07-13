@@ -1,14 +1,8 @@
-import {Router} from "express";
-import {getMessages} from "../controllers/messageController";
+import { Router } from "express";
+import { getMessages } from "../controllers/messageController";
 
+const router = Router();
 
-const router=Router();
-
-
-router.get(
-"/:user1/:user2",
-getMessages
-);
-
+router.get("/:user1/:user2", getMessages);
 
 export default router;

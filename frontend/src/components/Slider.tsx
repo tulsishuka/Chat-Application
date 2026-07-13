@@ -1,116 +1,223 @@
-import React from 'react'
-import { MessageSquare, Users, Phone, Settings, MoreVertical } from 'lucide-react'
+import { useEffect, useState } from "react";
+import {
+  MessageSquare,
+  Users,
+  Phone,
+  Settings,
+  MoreVertical,
+} from "lucide-react";
 
-const Slider = () => {
+import API from "../api/axios";
+import socket from "../socket/socket";
+
+interface User {
+  _id: string;
+  username: string;
+  online: boolean;
+}
+
+interface SliderProps {
+  selectedUser: string;
+  setSelectedUser: React.Dispatch<React.SetStateAction<string>>;
+}
+
+const Slider = ({
+  selectedUser,
+  setSelectedUser,
+}: SliderProps) => {
+  const [users, setUsers] = useState<User[]>([]);
+
+  const currentUser = localStorage.getItem("username") || "";
+
   const menuItems = [
-    { name: 'Chats', icon: MessageSquare, active: true },
-    { name: 'Contacts', icon: Users, active: false },
-    { name: 'Calls', icon: Phone, active: false },
-    { name: 'Settings', icon: Settings, active: false },
-  ]
+    {
+      name: "Chats",
+      icon: MessageSquare,
+      active: true,
+    },
+    {
+      name: "Contacts",
+      icon: Users,
+      active: false,
+    },
+    {
+      name: "Calls",
+      icon: Phone,
+      active: false,
+    },
+    {
+      name: "Settings",
+      icon: Settings,
+      active: false,
+    },
+  ];
 
-  const onlineFriends = [
-    {
-      name: 'Jordan Smith',
-      role: 'Product Design',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&h=80&q=80',
-    },
-    {
-      name: 'Sarah Chen',
-      role: 'Systems Architect',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=80&h=80&q=80',
-    },
-  ]
+  const loadUsers = async () => {
+    try {
+      const res = await API.get(`/auth/users?username=${currentUser}`);
+
+      setUsers(res.data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  // Listen for realtime user updates
+  useEffect(() => {
+    socket.on("usersUpdated", (updatedUsers: User[]) => {
+      const filtered = updatedUsers.filter(
+        (u) => u.username !== currentUser
+      );
+
+      setUsers(filtered);
+    });
+
+    return () => {
+      socket.off("usersUpdated");
+    };
+  }, []);
 
   return (
-    <div className="w-64 h-screen bg-[#0f172a] text-slate-300 flex flex-col justify-between border-r border-slate-800 font-sans select-none">
-      {/* Top Section */}
-      <div className="flex-1 overflow-y-auto px-4 py-6">
-        {/* Title */}
-        <h1 className="text-xl font-bold text-white mb-6 px-2 tracking-tight">
+    <div className="w-72 bg-[#0f172a] border-r border-slate-800 flex flex-col">
+
+      <div className="p-5">
+
+        <h1 className="text-white text-2xl font-bold mb-6">
           Realtime Chat
         </h1>
 
-        {/* Navigation Menu */}
-        <nav className="space-y-1 mb-8">
+        <nav className="space-y-2">
+
           {menuItems.map((item) => {
-            const Icon = item.icon
+
+            const Icon = item.icon;
+
             return (
               <button
                 key={item.name}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all duration-150 ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition
+
+                ${
                   item.active
-                    ? 'bg-[#2563eb] text-white'
-                    : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
+                    ? "bg-blue-600 text-white"
+                    : "text-slate-400 hover:bg-slate-800"
                 }`}
               >
-                <Icon className={`w-5 h-5 ${item.active ? 'text-white' : 'text-slate-400'}`} />
+                <Icon size={18} />
+
                 {item.name}
               </button>
-            )
+            );
           })}
         </nav>
 
-        {/* Divider line before section header */}
-        <div className="border-t border-slate-800/60 my-4"></div>
+      </div>
 
-        {/* Online Section Header */}
-        <div className="text-[11px] font-mono tracking-widest text-slate-500 uppercase px-2 mb-4">
-          ONLINE NOW – 12
-        </div>
+      <div className="border-t border-slate-700"></div>
 
-        {/* Online Members List */}
-        <div className="space-y-4 px-1">
-          {onlineFriends.map((friend) => (
-            <div key={friend.name} className="flex items-center gap-3 group cursor-pointer">
-              {/* Avatar with dynamic indicator */}
-              <div className="relative flex-shrink-0">
-                <img
-                  src={friend.avatar}
-                  alt={friend.name}
-                  className="w-10 h-10 rounded-full object-cover border border-slate-700"
+      <div className="flex-1 overflow-y-auto p-4">
+
+        <h3 className="text-xs uppercase text-slate-500 mb-4">
+          Users
+        </h3>
+
+        <div className="space-y-2">
+
+          {users.map((user) => (
+
+            <button
+              key={user._id}
+              onClick={() =>
+                setSelectedUser(user.username)
+              }
+              className={`w-full flex items-center gap-3 p-3 rounded-lg transition
+
+              ${
+                selectedUser === user.username
+                  ? "bg-blue-600"
+                  : "hover:bg-slate-800"
+              }`}
+            >
+
+              <div className="relative">
+
+                <div className="w-11 h-11 rounded-full bg-blue-700 flex items-center justify-center text-white font-bold">
+
+                  {user.username.charAt(0).toUpperCase()}
+
+                </div>
+
+                <span
+                  className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[#0f172a]
+
+                  ${
+                    user.online
+                      ? "bg-green-500"
+                      : "bg-gray-500"
+                  }`}
                 />
-                <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-[#38bdf8] ring-2 ring-[#0f172a]" />
+
               </div>
 
-              {/* Identity metadata */}
-              <div className="flex-1 min-w-0">
-                <h4 className="text-xs font-bold text-slate-200 truncate group-hover:text-white transition-colors">
-                  {friend.name}
-                </h4>
-                <p className="text-[10px] text-slate-500 truncate mt-0.5">
-                  {friend.role}
+              <div className="text-left">
+
+                <p className="text-white font-medium">
+
+                  {user.username}
+
                 </p>
+
+                <p
+                  className={`text-xs
+
+                  ${
+                    user.online
+                      ? "text-green-400"
+                      : "text-slate-500"
+                  }`}
+                >
+                  {user.online
+                    ? "Online"
+                    : "Offline"}
+                </p>
+
               </div>
-            </div>
+
+            </button>
+
           ))}
+
         </div>
+
       </div>
 
-      {/* User Profile Footer Section */}
-      <div className="p-4 bg-[#0d1527] border-t border-slate-800/80 flex items-center justify-between">
-        <div className="flex items-center gap-3 min-w-0">
-          <img
-            src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=80&h=80&q=80"
-            alt="Alex Rivera"
-            className="w-9 h-9 rounded-full object-cover"
-          />
-          <div className="min-w-0">
-            <h4 className="text-xs font-bold text-slate-200 truncate leading-none mb-1">
-              Alex Rivera
-            </h4>
-            <div className="flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#38bdf8]" />
-              <span className="text-[10px] text-[#38bdf8] font-medium">Online</span>
-            </div>
-          </div>
+      <div className="border-t border-slate-800 p-4 flex justify-between items-center">
+
+        <div>
+
+          <p className="text-white font-medium">
+            {currentUser}
+          </p>
+
+          <p className="text-green-400 text-xs">
+            Online
+          </p>
+
         </div>
-        <button className="text-slate-500 hover:text-slate-300 p-1 rounded transition-colors">
-          <MoreVertical className="w-4 h-4" />
-        </button>
+
+        <MoreVertical
+          size={18}
+          className="text-slate-400"
+        />
+
       </div>
+
     </div>
-  )
-}
+  );
+};
 
-export default Slider
+export default Slider;
