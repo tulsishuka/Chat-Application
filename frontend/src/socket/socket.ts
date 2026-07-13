@@ -9,5 +9,4 @@ autoConnect:false
 }
 );
 
-
 export default socket;
