@@ -20,22 +20,19 @@ const Login = () => {
     try {
       setLoading(true);
 
-      // Login/Create User
       const res = await API.post("/auth/login", {
         username: username.trim(),
       });
 
       const user = res.data.user;
 
-      // Save locally
       localStorage.setItem("username", user.username);
 
-      // Connect socket once
       if (!socket.connected) {
         socket.connect();
       }
 
-      // Notify server
+
       socket.emit("login", user.username);
 
       navigate("/home");
